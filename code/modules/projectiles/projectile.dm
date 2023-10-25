@@ -464,6 +464,9 @@
 		if(!isxeno(L))
 			hit_chance -= base_miss_chance[def_zone] // Reduce accuracy based on spot.
 
+		if(original != L && HAS_TRAIT(src, TRAIT_NESTED))
+			hit_chance -= 50 //Less likely to hit nested people that were not targeted directly
+
 		#if DEBUG_HIT_CHANCE
 		to_world(SPAN_DEBUG("([L]) Hit chance: [hit_chance] | Roll: [hit_roll]"))
 		#endif
@@ -777,9 +780,6 @@
 
 		if(mobility_aura)
 			. -= mobility_aura * 5
-
-		if(HAS_TRAIT(src, TRAIT_NESTED))
-			. -= 50 //Less likely to hit nested people
 
 		var/mob/living/carbon/human/shooter_human = P.firer
 		if(istype(shooter_human))
