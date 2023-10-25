@@ -460,7 +460,9 @@
 			def_zone = rand_zone()
 		else
 			SEND_SIGNAL(firer, COMSIG_BULLET_DIRECT_HIT, L)
-		if(!isxeno(L)) hit_chance -= base_miss_chance[def_zone] // Reduce accuracy based on spot.
+
+		if(!isxeno(L))
+			hit_chance -= base_miss_chance[def_zone] // Reduce accuracy based on spot.
 
 		#if DEBUG_HIT_CHANCE
 		to_world(SPAN_DEBUG("([L]) Hit chance: [hit_chance] | Roll: [hit_roll]"))
@@ -772,8 +774,13 @@
 			|| P.runtime_iff_group && get_target_lock(P.runtime_iff_group)\
 		)
 			return FALSE
+
 		if(mobility_aura)
 			. -= mobility_aura * 5
+
+		if(HAS_TRAIT(src, TRAIT_NESTED))
+			. -= 50 //Less likely to hit nested people
+
 		var/mob/living/carbon/human/shooter_human = P.firer
 		if(istype(shooter_human))
 			if(shooter_human.faction == faction && !(ammo_flags & AMMO_ALWAYS_FF))
