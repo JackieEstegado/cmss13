@@ -333,6 +333,7 @@
 /datum/reagent/proc/insert_property(property, level)
 	var/datum/chem_property/match
 	var/datum/chem_property/initial_property
+	var/initial_property_level
 	for(var/datum/chem_property/P in properties)
 		if(P.name == property)
 			match = P
@@ -348,8 +349,9 @@
 						pieces++
 				if(pieces >= length(combo))
 					initial_property = property
+					initial_property_level = level
 					property = C
-					level = max(level - P.level, P.level - level, 1)
+					level = min(level, P.level)
 					for(var/datum/chem_property/R in properties)
 						if(combo.Find(R.name) && !(R.category & PROPERTY_TYPE_CATALYST))
 							R.level -= level
@@ -376,23 +378,25 @@
 				remove_property(match.name)
 				return FALSE
 			break
-	//Insert the property
-	var/datum/chem_property/P = GLOB.chemical_properties_list[property]
+
+	var/datum/chem_property/P
+	//If we had a combination, insert the property we originally wanted but with its level reduced from it having been used up for the combination
+	if(initial_property && initial_property != property)
+		P = GLOB.chemical_properties_list[initial_property]
+		P = new P.type()
+		P.level = initial_property_level - level
+		P.holder = src
+		if(P.level > 0) // If all of its level got used up then we wont add it
+			LAZYADD(properties, P)
+
+	//Insert the property from the combination
+	P = GLOB.chemical_properties_list[property]
 	if (level > P.max_level)
 		level = min(P.max_level, level) // double checking, in case some combo property has a max level and we want that respected
 	P = new P.type()
 	P.level = level
 	P.holder = src
 	LAZYADD(properties, P)
-
-	//Special case: If it's a catalyst property, add it nonetheless.
-	if(initial_property && initial_property != property)
-		P = GLOB.chemical_properties_list[initial_property]
-		if(P.category & PROPERTY_TYPE_CATALYST)
-			P = new P.type()
-			P.level = level
-			P.holder = src
-			LAZYADD(properties, P)
 
 	recalculate_variables()
 	return TRUE
